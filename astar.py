@@ -15,7 +15,7 @@ class Node:
         self.x = x
         self.y = y
         self.state = s
-        self.g = 0
+        self.g = 10e10
         self.parent = 0
         self.draw_state = 0
 
@@ -109,7 +109,7 @@ def arc_cost(child, parent):
 
 # Cost function
 def f(n, goal):
-    return n.g + hier(n, goal)
+    return n.g #+ hier(n, goal)
 
 def attach_and_eval(child, parent):
     child.set_best_parent(parent)
@@ -147,6 +147,7 @@ def print_parent_path(node):
 def best_first_search(nodes, start):
     OPEN = []
     heapq.heappush(OPEN, start)
+    start.set_g(0)
     CLOSED = []
 
     while 1:
@@ -167,6 +168,7 @@ def best_first_search(nodes, start):
                 heapq.heappush(OPEN, s)
             elif x.g + arc_cost(s, x) < s.g:
                 attach_and_eval(s, x)
-                propagate_path_improvements(s)
+                if s in CLOSED:
+                    propagate_path_improvements(s)
 
 main()
