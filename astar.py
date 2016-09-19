@@ -1,7 +1,8 @@
-import numpy as np
+import heapq
 import math
 
 lines = []
+goal = 0
 
 # State. Unique index + cost
 class STATE:
@@ -38,6 +39,9 @@ class Node:
         self.g = 0
         self.parent = 0
 
+    def __cmp__(self, other):
+        return cmp(f(self, goal), f(other, goal))
+
     def set_kids(self, c):
         self.children = c
 
@@ -47,12 +51,14 @@ class Node:
     def set_best_parent(self, parent):
         self.parent = parent
 
-with open('boards/board-2-1.txt') as f:
+
+with open('boards/board-2-4.txt') as f:
     for l in f:
         lines.append(l)
 
 # Parses the textfile and creates the board
 def main():
+    global goal
     board = []
 
     for y in range(len(lines)):
@@ -69,7 +75,7 @@ def main():
             board[y][x] = node
 
     nodes = create_nodes(board)
-    best_first_search(nodes, start, goal)
+    best_first_search(nodes, start)
 
 # Flattens the two-dimensional board into a tree of the nodes
 def create_nodes(board):
@@ -114,18 +120,6 @@ def child_nodes(node, board):
 
     return children
 
-# Since OPEN is not currently a priority queue this ensures that we only look
-# at the currently best node
-def lowest_node_cost(open_arr, goal):
-    lowest_cost = 10e100
-    best = 0
-    for n in open_arr:
-        cost = f(n, goal)
-        if cost < lowest_cost:
-            best = n
-            lowest_cost = cost
-    return best
-
 # Only cost needed is the cost of the node you are walking to
 def arc_cost(child, parent):
     cost = child.state[1]
@@ -134,7 +128,6 @@ def arc_cost(child, parent):
 # Cost function
 def f(n, goal):
     return n.g + hier(n, goal)
-
 
 def attach_and_eval(child, parent):
     child.set_best_parent(parent)
@@ -168,24 +161,23 @@ def print_parent_path(node):
     for l in lines:
         print(l.strip())
 
-def best_first_search(nodes, start, goal):
-    OPEN = [start]
+def best_first_search(nodes, start):
+    OPEN = []
+    heapq.heappush(OPEN, start)
     CLOSED = []
 
     while 1:
-        x = lowest_node_cost(OPEN, goal)
-        print(x.x,x.y)
+        x = heapq.heappop(OPEN)
         if x == goal:
             print("yay")
             print_parent_path(x)
             break
-        OPEN.remove(x)
         CLOSED.append(x)
         SUCC = x.children
         for s in SUCC:
             if s not in OPEN and s not in CLOSED:
                 attach_and_eval(s, x)
-                OPEN.append(s)
+                heapq.heappush(OPEN, s)
             elif x.g + arc_cost(s, x) < s.g:
                 attach_and_eval(s, x)
                 propagate_path_improvements(s)
