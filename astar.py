@@ -3,14 +3,32 @@ import math
 
 lines = []
 
+# State. Unique index + cost
 class STATE:
-    GOAL = 0
-    START = 1
-    WATER = 2
-    MOUNTAIN = 3
-    FOREST = 4
-    GRASS = 5
-    ROAD = 6
+    GOAL = (0, 1)
+    START = (1, 1)
+    WATER = (2, 100)
+    MOUNTAIN = (3, 50)
+    FOREST = (4, 10)
+    GRASS = (5, 5)
+    ROAD = (6, 1)
+    @staticmethod
+    def get_state_for_char(c):
+        if c == "w":
+            return STATE.WATER
+        elif c == "f":
+            return STATE.FOREST
+        elif c == "g":
+            return STATE.GRASS
+        elif c == "r":
+            return STATE.ROAD
+        elif c == "m":
+            return STATE.MOUNTAIN
+        elif c == "A":
+            return STATE.GOAL
+        elif c == "B":
+            return STATE.START
+
 
 class Node:
     def __init__(self, x, y, s):
@@ -29,7 +47,7 @@ class Node:
     def set_best_parent(self, parent):
         self.parent = parent
 
-with open('boards/board-2-2.txt') as f:
+with open('boards/board-2-1.txt') as f:
     for l in f:
         lines.append(l)
 
@@ -44,24 +62,12 @@ def main():
         board.append([0]*len(line))
         for x in range(len(line)):
             c = line[x]
-            if c == "w":
-                node = Node(x, y, STATE.WATER)
-            elif c == "f":
-                node = Node(x, y, STATE.FOREST)
-            elif c == "g":
-                node = Node(x, y, STATE.GRASS)
-            elif c == "r":
-                node = Node(x, y, STATE.ROAD)
-            elif c == "m":
-                node = Node(x, y, STATE.MOUNTAIN)
-            elif c == "A":
-                node = Node(x, y, STATE.GOAL)
-                goal = node
-            elif c == "B":
-                node = Node(x, y, STATE.START)
+            state = STATE.get_state_for_char(c)
+            node = Node(x, y, state)
+            if state == STATE.START:
                 start = node
-            else:
-                continue
+            if state == STATE.GOAL:
+                goal = node
             board[y][x] = node
 
     nodes = create_nodes(board)
@@ -119,23 +125,8 @@ def lowest_node_cost(open_arr, goal):
     return best
 
 def arc_cost(child, parent):
-    print(child.state)
-    if child.state == STATE.WATER:
-        return 100
-    elif child.state == STATE.MOUNTAIN:
-        return 50
-    elif child.state == STATE.FOREST:
-        return 10
-    elif child.state == STATE.GRASS:
-        return 5
-    elif child.state == STATE.ROAD:
-        return 1
-    elif child.state == STATE.GOAL:
-        return 1
-    elif child.state == STATE.START:
-        return 1
-    else:
-        print("wops")
+    cost = child.state[1]
+    return cost
 
 def attach_and_eval(child, parent):
     child.set_best_parent(parent)
