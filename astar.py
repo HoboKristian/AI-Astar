@@ -51,9 +51,7 @@ with open('boards/board-2-1.txt') as f:
     for l in f:
         lines.append(l)
 
-def f(n, goal):
-    return n.g + hier(n, goal)
-
+# Parses the textfile and creates the board
 def main():
     board = []
 
@@ -73,6 +71,7 @@ def main():
     nodes = create_nodes(board)
     best_first_search(nodes, start, goal)
 
+# Flattens the two-dimensional board into a tree of the nodes
 def create_nodes(board):
     nodes = []
     for y in range(len(board)):
@@ -90,12 +89,17 @@ def create_nodes(board):
 
     return nodes
 
+# h(x) which defines the estimated cost from a node to the goal
+# currently uses the eucliden distance: sqrt(x_diff^2+y_diff^2)
 def hier(node, goal):
     x1,y1 = float(goal.x), float(goal.y)
     x2,y2 = float(node.x), float(node.y)
     cost = math.sqrt(abs(x1-x2)**2 + abs(y1-y2)**2)
     return cost
 
+# Creates an array containing tuples of all the children (x, y)
+# The tuples are trimmed to fit within the boundaries of the map
+# Currently only uses adjacents nodes (which it should)
 def child_nodes(node, board):
     children = []
     x = node.x
@@ -110,10 +114,8 @@ def child_nodes(node, board):
 
     return children
 
-def print_node_costs(nodes, goal):
-    for n in nodes:
-        print(f(n, goal), n.x, n.y)
-
+# Since OPEN is not currently a priority queue this ensures that we only look
+# at the currently best node
 def lowest_node_cost(open_arr, goal):
     lowest_cost = 10e100
     best = 0
@@ -124,9 +126,15 @@ def lowest_node_cost(open_arr, goal):
             lowest_cost = cost
     return best
 
+# Only cost needed is the cost of the node you are walking to
 def arc_cost(child, parent):
     cost = child.state[1]
     return cost
+
+# Cost function
+def f(n, goal):
+    return n.g + hier(n, goal)
+
 
 def attach_and_eval(child, parent):
     child.set_best_parent(parent)
@@ -140,6 +148,8 @@ def propagate_path_improvements(parent):
             c.set_g(cost)
             propagate_path_improvements(c)
 
+# Creates the path by going back from the goal and then changes the original
+# to include the path
 def print_parent_path(node):
     path = []
 
@@ -179,7 +189,5 @@ def best_first_search(nodes, start, goal):
             elif x.g + arc_cost(s, x) < s.g:
                 attach_and_eval(s, x)
                 propagate_path_improvements(s)
-
-#    print_node_costs(nodes,goal)
 
 main()
