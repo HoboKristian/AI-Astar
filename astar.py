@@ -4,10 +4,13 @@ import math
 lines = []
 
 class STATE:
-    OPEN = 0
-    CLOSED = 1
-    GOAL = 2
-    START = 3
+    GOAL = 0
+    START = 1
+    WATER = 2
+    MOUNTAIN = 3
+    FOREST = 4
+    GRASS = 5
+    ROAD = 6
 
 class Node:
     def __init__(self, x, y, s):
@@ -26,7 +29,7 @@ class Node:
     def set_best_parent(self, parent):
         self.parent = parent
 
-with open('boards/board-2-1.txt') as f:
+with open('boards/board-2-2.txt') as f:
     for l in f:
         lines.append(l)
 
@@ -41,10 +44,16 @@ def main():
         board.append([0]*len(line))
         for x in range(len(line)):
             c = line[x]
-            if c == ".":
-                node = Node(x, y, STATE.OPEN)
-            elif c == "#":
-                node = Node(x, y, STATE.CLOSED)
+            if c == "w":
+                node = Node(x, y, STATE.WATER)
+            elif c == "f":
+                node = Node(x, y, STATE.FOREST)
+            elif c == "g":
+                node = Node(x, y, STATE.GRASS)
+            elif c == "r":
+                node = Node(x, y, STATE.ROAD)
+            elif c == "m":
+                node = Node(x, y, STATE.MOUNTAIN)
             elif c == "A":
                 node = Node(x, y, STATE.GOAL)
                 goal = node
@@ -70,8 +79,7 @@ def create_nodes(board):
         for c in child_nodes(n, board):
             c_x, c_y = c
             child = board[c_y][c_x]
-            if child.state != STATE.CLOSED:
-                children.append(child)
+            children.append(child)
         n.set_kids(children)
 
     return nodes
@@ -110,15 +118,35 @@ def lowest_node_cost(open_arr, goal):
             lowest_cost = cost
     return best
 
+def arc_cost(child, parent):
+    print(child.state)
+    if child.state == STATE.WATER:
+        return 100
+    elif child.state == STATE.MOUNTAIN:
+        return 50
+    elif child.state == STATE.FOREST:
+        return 10
+    elif child.state == STATE.GRASS:
+        return 5
+    elif child.state == STATE.ROAD:
+        return 1
+    elif child.state == STATE.GOAL:
+        return 1
+    elif child.state == STATE.START:
+        return 1
+    else:
+        print("wops")
+
 def attach_and_eval(child, parent):
     child.set_best_parent(parent)
-    child.set_g(parent.g + 1)
+    child.set_g(parent.g + arc_cost(child, parent))
 
 def propagate_path_improvements(parent):
     for c in parent.children:
-        if parent.g + 1 < c.g:
+        cost = parent.g + arc_cost(c, parent)
+        if cost < c.g:
             c.set_best_parent(parent)
-            c.set_g(parent.g + 1)
+            c.set_g(cost)
             propagate_path_improvements(c)
 
 def print_parent_path(node):
@@ -157,7 +185,7 @@ def best_first_search(nodes, start, goal):
             if s not in OPEN and s not in CLOSED:
                 attach_and_eval(s, x)
                 OPEN.append(s)
-            elif x.g + 1 < s.g:
+            elif x.g + arc_cost(s, x) < s.g:
                 attach_and_eval(s, x)
                 propagate_path_improvements(s)
 
