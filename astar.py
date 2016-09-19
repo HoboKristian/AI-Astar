@@ -72,7 +72,8 @@ def create_nodes(board):
         for c in child_nodes(n, board):
             c_x, c_y = c
             child = board[c_y][c_x]
-            children.append(child)
+            if child.state != STATE.CLOSED:
+                children.append(child)
         n.set_kids(children)
 
     return nodes
@@ -145,6 +146,7 @@ def print_parent_path(node):
         print(l.strip())
 
 def best_first_search(nodes, start):
+#    OPEN = [start]
     OPEN = []
     heapq.heappush(OPEN, start)
     start.set_g(0)
@@ -152,6 +154,7 @@ def best_first_search(nodes, start):
 
     while 1:
         x = heapq.heappop(OPEN)
+#        x = OPEN[len(OPEN)-1]
         if x.x == goal.x and x.y == goal.y:
             for closed_node in CLOSED:
                 closed_node.draw_state = STATE.DRAW_CLOSED
@@ -160,11 +163,13 @@ def best_first_search(nodes, start):
             print_parent_path(x)
             draw.draw_nodes(nodes, board_x, board_y)
             break
+#        OPEN.remove(x)
         CLOSED.append(x)
         SUCC = x.children
         for s in SUCC:
             if s not in OPEN and s not in CLOSED:
                 attach_and_eval(s, x)
+#                OPEN.append(s)
                 heapq.heappush(OPEN, s)
             elif x.g + arc_cost(s, x) < s.g:
                 attach_and_eval(s, x)
