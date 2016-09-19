@@ -1,35 +1,14 @@
 import heapq
 import math
+import draw
+from state import STATE
 
 lines = []
 goal = 0
 
-# State. Unique index + cost
-class STATE:
-    GOAL = (0, 1)
-    START = (1, 1)
-    WATER = (2, 100)
-    MOUNTAIN = (3, 50)
-    FOREST = (4, 10)
-    GRASS = (5, 5)
-    ROAD = (6, 1)
-    @staticmethod
-    def get_state_for_char(c):
-        if c == "w":
-            return STATE.WATER
-        elif c == "f":
-            return STATE.FOREST
-        elif c == "g":
-            return STATE.GRASS
-        elif c == "r":
-            return STATE.ROAD
-        elif c == "m":
-            return STATE.MOUNTAIN
-        elif c == "A":
-            return STATE.GOAL
-        elif c == "B":
-            return STATE.START
-
+board_name = "board-1-1.txt"
+board_x = 0
+board_y = 0
 
 class Node:
     def __init__(self, x, y, s):
@@ -38,6 +17,7 @@ class Node:
         self.state = s
         self.g = 0
         self.parent = 0
+        self.draw_state = 0
 
     def __cmp__(self, other):
         return cmp(f(self, goal), f(other, goal))
@@ -52,14 +32,16 @@ class Node:
         self.parent = parent
 
 
-with open('boards/board-2-4.txt') as f:
+with open('boards/' + board_name) as f:
     for l in f:
         lines.append(l)
 
 # Parses the textfile and creates the board
 def main():
-    global goal
+    global goal, board_x, board_y
     board = []
+    board_x = len(lines[0])
+    board_y = len(lines)
 
     for y in range(len(lines)):
         line = lines[y].strip()
@@ -148,6 +130,7 @@ def print_parent_path(node):
 
     while node.parent:
         path.append((node.x, node.y))
+        node.draw_state = STATE.DRAW_PATH
         node = node.parent
 
     i = 0
@@ -168,9 +151,13 @@ def best_first_search(nodes, start):
 
     while 1:
         x = heapq.heappop(OPEN)
-        if x == goal:
-            print("yay")
+        if x.x == goal.x and x.y == goal.y:
+            for closed_node in CLOSED:
+                closed_node.draw_state = STATE.DRAW_CLOSED
+            for open_node in OPEN:
+                open_node.draw_state = STATE.DRAW_OPEN
             print_parent_path(x)
+            draw.draw_nodes(nodes, board_x, board_y)
             break
         CLOSED.append(x)
         SUCC = x.children
