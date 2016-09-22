@@ -6,7 +6,7 @@ from state import STATE
 lines = []
 goal = 0
 
-board_name = "board-1-1.txt"
+board_name = "board-2-3.txt"
 board_x = 0
 board_y = 0
 
@@ -110,12 +110,14 @@ def arc_cost(child, parent):
 
 # Cost function
 def f(n, goal):
-    return n.g #+ hier(n, goal)
+    return n.g + hier(n, goal)
 
+# Change currently best parent and update the g(x)
 def attach_and_eval(child, parent):
     child.set_best_parent(parent)
     child.set_g(parent.g + arc_cost(child, parent))
 
+# Recursively propagate backwards to update the currently best costs g(x)
 def propagate_path_improvements(parent):
     for c in parent.children:
         cost = parent.g + arc_cost(c, parent)
@@ -147,14 +149,18 @@ def print_parent_path(node):
 
 def best_first_search(nodes, start):
 #    OPEN = [start]
+    # Create priority queue OPEN as a heapq
     OPEN = []
     heapq.heappush(OPEN, start)
+    # Set G(n0) -> 0
     start.set_g(0)
     CLOSED = []
 
     while 1:
+        # Get currently best node
         x = heapq.heappop(OPEN)
 #        x = OPEN[len(OPEN)-1]
+        # Draw the board and quit the program if the best node is goal
         if x.x == goal.x and x.y == goal.y:
             for closed_node in CLOSED:
                 closed_node.draw_state = STATE.DRAW_CLOSED
@@ -164,15 +170,22 @@ def best_first_search(nodes, start):
             draw.draw_nodes(nodes, board_x, board_y)
             break
 #        OPEN.remove(x)
+        # Add the best node to closed
         CLOSED.append(x)
+        # Find all children
         SUCC = x.children
         for s in SUCC:
+            # Evalutate all children and propagate backwards along the path
+            # if a better solution is found
             if s not in OPEN and s not in CLOSED:
                 attach_and_eval(s, x)
 #                OPEN.append(s)
                 heapq.heappush(OPEN, s)
             elif x.g + arc_cost(s, x) < s.g:
                 attach_and_eval(s, x)
+                # Node is currently part of a path but there is now found a
+                # better solution (lower cost) to the node. Propagate this
+                # change backwards to the root node.
                 if s in CLOSED:
                     propagate_path_improvements(s)
 
